@@ -1,0 +1,7 @@
+{
+  "authorization": "PASTE_YOUR_AUTHORIZATION_HEADER_HERE",
+  "cookie": "f-s-c=...; f-d=...; fansly-d=...; fansly-ts-info={\"tso\":0,\"sts\":0,\"cts\":0}",
+  "client_id": "PASTE_YOUR_FANSLY_CLIENT_ID_HEADER_HERE",
+  "session_id": "PASTE_YOUR_FANSLY_SESSION_ID_HEADER_HERE",
+  "client_checks": {}
+}

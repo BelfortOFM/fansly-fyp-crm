@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CRM Fansly — FYP</title>
+<style>
+  :root {
+    --bg: #0d0f14; --panel: #161a22; --panel2: #1d2230; --border: #2a3040;
+    --text: #e6e9f0; --muted: #8a93a6; --accent: #e6399b; --accent2: #7b5cff;
+    --ok: #3ddc84; --warn: #ffb020;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 20px 24px 60px;
+  }
+  header {
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    position: sticky; top: 0; background: var(--bg); padding: 12px 0; z-index: 5;
+    border-bottom: 1px solid var(--border); margin-bottom: 18px;
+  }
+  header h1 { font-size: 20px; font-weight: 700; }
+  header h1 span { color: var(--accent); }
+  .stats { color: var(--muted); font-size: 13px; }
+  .controls { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+  input, select {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; display: flex; flex-direction: column; transition: transform .12s, border-color .12s;
+  }
+  .card:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .thumb { position: relative; aspect-ratio: 9/16; background: #000; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .dur {
+    position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.75);
+    padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  }
+  .thumb .rank {
+    position: absolute; left: 8px; top: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    padding: 3px 9px; border-radius: 6px; font-size: 12px; font-weight: 700;
+  }
+  .thumb .lock {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.6); font-weight: 700; font-size: 14px; color: var(--warn);
+  }
+  .body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .who { display: flex; align-items: center; gap: 8px; }
+  .who .name { font-weight: 700; font-size: 15px; cursor: pointer; }
+  .who .at { color: var(--muted); font-size: 13px; cursor: pointer; }
+  .who .name:hover, .who .at:hover { color: var(--accent); }
+  .profile-bar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 18px;
+  }
+  .profile-bar.hidden { display: none; }
+  .profile-bar .avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 22px; color: #fff; flex-shrink: 0;
+  }
+  .profile-bar .pname { font-size: 18px; font-weight: 700; }
+  .profile-bar .pat { color: var(--muted); font-size: 14px; }
+  .profile-bar .pstats { display: flex; gap: 16px; color: var(--muted); font-size: 13px; flex-wrap: wrap; }
+  .profile-bar .pstats b { color: var(--text); }
+  .profile-bar .back-btn { margin-left: auto; width: auto; padding: 7px 16px; }
+  .meta { display: flex; gap: 12px; color: var(--muted); font-size: 12.5px; flex-wrap: wrap; }
+  .meta b { color: var(--text); }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2px 9px; font-size: 11px; cursor: pointer;
+  }
+  .tag.hot { color: var(--accent); border-color: rgba(230,57,155,.4); }
+  .tag-pick { cursor: pointer; user-select: none; transition: background .12s, border-color .12s, color .12s; }
+  .tag-pick:hover { border-color: var(--accent); }
+  .tag-pick.sel {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border-color: transparent; font-weight: 700;
+  }
+  .tag-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .cap { color: var(--muted); font-size: 12px; line-height: 1.4; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .actions { margin-top: auto; }
+  .btn {
+    display: block; width: 100%; text-align: center; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border: none; border-radius: 8px; padding: 9px; font-weight: 700; font-size: 13px;
+    cursor: pointer; text-decoration: none;
+  }
+  .btn:disabled { background: var(--panel2); color: var(--muted); cursor: not-allowed; }
+  .btn:hover:not(:disabled) { filter: brightness(1.1); }
+  .btn.ghost {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  }
+  .actions.row { display: flex; gap: 8px; }
+  .note { color: var(--warn); font-size: 12px; margin: 8px 0 4px; }
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 50;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .overlay.hidden { display: none; }
+  .player-box {
+    position: relative; width: min(92vw, 560px); max-height: 90vh;
+    background: #000; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .player-box video { width: 100%; max-height: 80vh; display: block; background: #000; }
+  .player-info { padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: var(--panel); }
+  .player-info .name { font-weight: 700; flex: 1; }
+  .player-info .btn { width: auto; padding: 7px 14px; }
+  .close-x {
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    background: rgba(0,0,0,.6); border: none; color: #fff; width: 34px; height: 34px;
+    border-radius: 50%; font-size: 18px; cursor: pointer;
+  }
+  .hidden { display: none !important; }
+  .nav { display: flex; gap: 6px; }
+  .navbtn {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .navbtn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border-color: transparent;
+  }
+  .panel-block {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px; margin-bottom: 18px;
+  }
+  .panel-block h2 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+  .field label {
+    font-size: 11px; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+  .field input { width: 100%; }
+  .tag-row { display: flex; gap: 8px; }
+  .tag-row input { flex: 1; }
+  .tag-row .btn { width: auto; padding: 8px 12px; flex-shrink: 0; }
+  .hero { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .hero h2 { margin: 0; }
+  .hero .reels-info { margin: 4px 0 0; }
+  .hero .reels-info b { color: var(--ok); font-size: 15px; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-head h2 { margin: 0; }
+  .section-head .btn { width: auto; padding: 7px 14px; }
+  details summary { cursor: pointer; color: var(--muted); font-weight: 600; font-size: 13px; }
+  details.advanced { margin-bottom: 18px; }
+  details.advanced summary { margin-bottom: 12px; }
+  .cat-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .cat-top .cat-name { flex: 1; font-weight: 700; }
+  .cat-count { color: var(--ok); font-size: 12px; white-space: nowrap; }
+  .cat-top .del { width: auto; padding: 4px 10px; color: var(--warn); }
+  .cat-grid { display: grid; grid-template-columns: 1.4fr 0.8fr 0.9fr 0.9fr; gap: 10px; margin-bottom: 10px; }
+  .cat-grid .field { min-width: 0; }
+  details.more { margin-top: 2px; }
+  details.more summary { color: var(--accent); font-size: 12px; }
+  .browse { margin-top: 10px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .browse-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--panel2); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .browse-head span { flex: 1; color: var(--muted); font-size: 12px; word-break: break-all; min-width: 120px; }
+  .browse-head .btn { width: auto; padding: 6px 12px; font-size: 12px; }
+  .browse-list { max-height: 280px; overflow: auto; padding: 6px; }
+  .browse-item { padding: 7px 10px; border-radius: 7px; font-size: 13px; }
+  .browse-item.dir { cursor: pointer; }
+  .browse-item.dir:hover { background: var(--panel2); color: var(--accent); }
+  .browse-item.vid { color: var(--muted); }
+  .browse-empty { color: var(--muted); font-size: 12px; padding: 10px; }
+  .best-hours { margin-top: 14px; padding: 14px; background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; }
+  .best-hours h3 { font-size: 14px; font-weight: 700; margin: 0; }
+  .best-hours .section-head { margin-bottom: 10px; }
+  .best-hours-out { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .hour-chip { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 700; }
+  .hour-chip span { opacity: .8; font-weight: 500; font-size: 11px; margin-left: 4px; }
+  .chart { display: flex; gap: 2px; align-items: flex-end; height: 60px; width: 100%; margin-top: 12px; }
+  .chart .bar { flex: 1; background: var(--accent2); border-radius: 3px 3px 0 0; min-height: 2px; opacity: .85; }
+  .chart .bar.hot { background: var(--accent); }
+  @media (max-width: 720px) { .cat-grid { grid-template-columns: 1fr 1fr; } }
+  .actions-row { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .actions-row .btn { width: auto; padding: 9px 18px; }
+  .cat-card { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .reels-info { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  .reels-info b { color: var(--ok); }
+  .log {
+    background: #0a0c10; border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px; white-space: pre-wrap; line-height: 1.5; margin-top: 12px;
+    max-height: 320px; overflow: auto; color: var(--muted);
+  }
+  .log b { color: var(--text); }
+  .sched-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .sched-row {
+    display: flex; align-items: center; gap: 10px; background: #0a0c10;
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px;
+  }
+  .sched-row .sched-info { flex: 1; font-size: 12.5px; color: var(--muted); word-break: break-word; }
+  .sched-row .del { width: auto; padding: 4px 10px; color: var(--warn); flex-shrink: 0; }
+  .recap-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .recap-row {
+    display: flex; gap: 12px; background: #0a0c10; border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px; align-items: flex-start;
+  }
+  .recap-thumb {
+    width: 64px; height: 114px; border-radius: 8px; background: #000; object-fit: cover;
+    flex-shrink: 0; border: 1px solid var(--border);
+  }
+  .recap-thumb.empty { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 10px; text-align: center; }
+  .recap-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .recap-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .recap-file { font-weight: 700; font-size: 12.5px; word-break: break-all; }
+  .recap-when { color: var(--muted); font-size: 12px; }
+  .recap-status { border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; margin-left: auto; flex-shrink: 0; }
+  .recap-status.publie { background: rgba(61,220,132,.15); color: var(--ok); border: 1px solid rgba(61,220,132,.4); }
+  .recap-status.programme { background: rgba(123,92,255,.15); color: var(--accent2); border: 1px solid rgba(123,92,255,.4); }
+  .recap-status.introuvable { background: rgba(255,176,32,.15); color: var(--warn); border: 1px solid rgba(255,176,32,.4); }
+  .recap-desc { font-size: 12.5px; color: var(--text); line-height: 1.4; }
+  .recap-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .recap-tags .tag { pointer-events: none; }
+  .recap-likes { color: var(--muted); font-size: 11.5px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>CRM <span>FYP</span></h1>
+    <nav class="nav">
+      <button class="navbtn active" data-view="fyp" onclick="switchView('fyp')">FYP</button>
+      <button class="navbtn" data-view="settings" onclick="switchView('settings')">Paramètres</button>
+    </nav>
+    <div class="stats" id="stats"></div>
+    <span id="accountBadge"></span>
+    <div class="controls" id="fypControls">
+      <input id="q" placeholder="Rechercher (tag, user, caption)" />
+      <select id="sort">
+        <option value="score">Trier : Meilleures stats</option>
+        <option value="likes">Trier : Likes</option>
+        <option value="position">Trier : Position FYP</option>
+        <option value="duration">Trier : Durée</option>
+        <option value="followers">Trier : Abonnés</option>
+      </select>
+      <select id="tagFilter">
+        <option value="">Filtre : Tous les tags</option>
+      </select>
+      <button class="btn ghost" onclick="runAnalyze()" style="width:auto;padding:8px 14px">🔍 Analyse</button>
+    </div>
+  </header>
+  <div class="profile-bar hidden" id="profileBar"></div>
+  <div class="note" id="note"></div>
+  <div class="log hidden" id="analyzeOut"></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="overlay hidden" id="overlay">
+    <div class="player-box">
+      <button class="close-x" onclick="closePlayer()">✕</button>
+      <video id="player" controls autoplay playsinline></video>
+      <div class="player-info">
+        <span class="name" id="playerName"></span>
+        <a class="btn ghost" id="playerDownload" href="#" download>⬇ Télécharger</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="loginOverlay" style="z-index:60">
+    <div class="player-box" style="width:min(92vw, 640px); max-height:92vh; overflow:auto; background:var(--panel); padding:24px;">
+      <h2 style="margin-bottom:8px">Connecte ton compte Fansly</h2>
+      <p style="color:var(--muted); font-size:13px; line-height:1.6; margin-bottom:14px">
+        1. Connecte-toi sur fansly.com dans ton navigateur (celui que tu utilises d'habitude).<br>
+        2. Ouvre les outils dev (<b>F12</b>, ou <b>Cmd+Option+I</b> sur Mac) → onglet <b>Network / Réseau</b>.<br>
+        3. Recharge la page fansly.com, clique sur une requête vers <code>apiv3.fansly.com</code> (ex: <code>account/me</code>).<br>
+        4. Clic droit sur la requête → <b>Copy</b> → <b>Copy as cURL (bash)</b>.<br>
+        5. Colle tout ci-dessous (Cmd+V).
+      </p>
+      <textarea id="loginPaste" rows="6" style="width:100%; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11px; background:var(--panel2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px;" placeholder="curl 'https://apiv3.fansly.com/...' -H 'authorization: ...' -H 'cookie: ...' ..."></textarea>
+      <div id="loginBtns" style="display:flex; gap:10px; margin-top:12px">
+        <button class="btn" onclick="submitLoginPaste()">Se connecter</button>
+      </div>
+      <div id="loginErr" style="color:var(--warn); font-size:13px; margin-top:10px"></div>
+      <details style="margin-top:18px">
+        <summary>Le collage automatique ne marche pas ? Remplir à la main</summary>
+        <div class="field-row" style="margin-top:12px">
+          <div class="field" style="flex:1 1 100%"><label>Authorization</label><input id="loginAuth" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field" style="flex:1 1 100%"><label>Cookie</label><input id="loginCookie" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>fansly-client-id</label><input id="loginClientId" /></div>
+          <div class="field"><label>fansly-session-id</label><input id="loginSessionId" /></div>
+        </div>
+        <button class="btn ghost" onclick="submitLoginManual()">Se connecter (manuel)</button>
+      </details>
+    </div>
+  </div>
+
+  <div id="settingsView" class="hidden">
+    <div class="panel-block hero">
+      <div>
+        <h2>Programmation des reels</h2>
+        <div class="reels-info" id="reelsInfo"></div>
+      </div>
+      <div class="actions-row">
+        <button class="btn" onclick="runSchedule()">▶ Programmer</button>
+        <button class="btn ghost del" onclick="stopSchedule()">⏹ Stopper</button>
+        <button class="btn ghost" onclick="toggleRecap()">📋 Récap</button>
+        <button class="btn ghost" onclick="resetLog()">↺ Réinitialiser le journal</button>
+      </div>
+    </div>
+
+    <div class="panel-block hidden" id="recapPanel">
+      <div class="section-head">
+        <h2>Récap des reels programmés</h2>
+        <button class="btn ghost" onclick="loadRecap()">↻ Rafraîchir</button>
+      </div>
+      <div class="recap-list" id="recapList"></div>
+    </div>
+
+    <div class="panel-block">
+      <div class="field-row">
+        <div class="field" style="flex:3">
+          <label>Dossier des vidéos</label>
+          <div class="tag-row">
+            <input id="sFolder" placeholder="chemin du dossier" />
+            <button class="btn ghost" onclick="pickFolder()">Choisir un dossier</button>
+          </div>
+        </div>
+        <div class="field"><label>Posts / jour</label><input id="sPostsPerDay" type="number" value="5" min="1" max="24" /></div>
+        <div class="field"><label>Date de début</label><input id="sStartDate" type="date" /></div>
+      </div>
+
+      <div id="browsePanel" class="browse hidden">
+        <div class="browse-head">
+          <span id="browsePath"></span>
+          <button class="btn ghost" onclick="browseParent()">↑ Parent</button>
+          <button class="btn" onclick="selectFolder()">Sélectionner</button>
+        </div>
+        <div class="browse-list" id="browseList"></div>
+      </div>
+
+      <div class="best-hours">
+        <div class="section-head">
+          <h3>Meilleures heures de posting</h3>
+          <button class="btn ghost" onclick="loadBestHours()">↻ Analyser</button>
+        </div>
+        <div id="bestHoursOut" class="best-hours-out"></div>
+      </div>
+
+      <details class="more">
+        <summary>Options (tags & caption)</summary>
+        <div class="field-row">
+          <div class="field" style="flex:2">
+            <label>Tags (clique sur ceux que tu veux, vide = meilleurs tags auto)</label>
+            <div class="tag-row">
+              <input id="sTags" placeholder="teen, blonde" />
+              <button class="btn ghost" onclick="fillTrendingInput()">✨ Top 5</button>
+              <button class="btn ghost" onclick="clearTagPick()">✕</button>
+            </div>
+            <div class="tag-picker" id="tagPicker"></div>
+          </div>
+          <div class="field" style="flex:2"><label>Caption (vide = auto)</label><input id="sCaption" /></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="log hidden" id="runStatus"></div>
+
+    <div class="panel-block">
+      <div class="section-head">
+        <h2>Posts planifiés sur le compte</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn ghost" onclick="loadScheduled()">↻ Rafraîchir</button>
+          <button class="btn ghost del" onclick="deleteAllScheduled()">🗑 Tout supprimer</button>
+        </div>
+      </div>
+      <div class="sched-list" id="scheduledOut"></div>
+    </div>
+  </div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let videos = [];
+let activeTag = '';
+let currentUser = null;
+let sessionInfo = { configured: false, username: null };
+
+async function checkSession() {
+  const r = await fetch('/api/session');
+  sessionInfo = await r.json();
+  renderAccountBadge();
+  if (!sessionInfo.configured) {
+    $('#loginOverlay').classList.remove('hidden');
+  } else {
+    $('#loginOverlay').classList.add('hidden');
+    init();
+  }
+}
+
+function renderAccountBadge() {
+  const el = $('#accountBadge');
+  if (!el) return;
+  el.innerHTML = sessionInfo.configured
+    ? `Connecté : <b>@${esc(sessionInfo.username || '')}</b> <button class="btn ghost" style="width:auto;padding:4px 10px;margin-left:8px" onclick="logoutSession()">Changer de compte</button>`
+    : '';
+}
+
+async function submitLoginPaste() {
+  await submitSession({ raw: $('#loginPaste').value.trim() });
+}
+
+async function submitLoginManual() {
+  await submitSession({
+    authorization: $('#loginAuth').value.trim(),
+    cookie: $('#loginCookie').value.trim(),
+    client_id: $('#loginClientId').value.trim(),
+    session_id: $('#loginSessionId').value.trim(),
+  });
+}
+
+async function submitSession(body) {
+  const err = $('#loginErr');
+  err.textContent = '';
+  const btns = $('#loginBtns').querySelectorAll('button');
+  btns.forEach(b => b.disabled = true);
+  try {
+    const r = await fetch('/api/session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'erreur inconnue');
+    sessionInfo = { configured: true, username: d.username };
+    renderAccountBadge();
+    $('#loginOverlay').classList.add('hidden');
+    init();
+  } catch (e) {
+    err.textContent = '⚠ ' + e.message;
+  } finally {
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+function logoutSession() {
+  fetch('/api/session/logout', { method: 'POST' }).then(() => {
+    sessionInfo = { configured: false, username: null };
+    renderAccountBadge();
+    $('#loginOverlay').classList.remove('hidden');
+  });
+}
+
+async function init() {
+  const r = await fetch('/api/videos');
+  videos = await r.json();
+  buildTagFilter();
+  render();
+}
+
+function buildTagFilter() {
+  const counts = {};
+  videos.forEach(v => (v.tags || []).forEach(t => counts[t] = (counts[t] || 0) + 1));
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  $('#tagFilter').innerHTML = '<option value="">Filtre : Tous les tags</option>' +
+    sorted.map(([t, n]) => `<option value="${esc(t)}">${esc(t)} (${n})</option>`).join('');
+}
+
+function fmtDur(s) {
+  if (s == null) return '?';
+  const m = Math.floor(s / 60), sec = Math.round(s % 60);
+  return m ? `${m}:${String(sec).padStart(2,'0')}` : `${sec}s`;
+}
+function fmtLikes(n) { return n >= 1000 ? (n/1000).toFixed(1).replace('.0','') + 'k' : n; }
+function esc(s) { return (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function scoreOf(v) {
+  const likes = v.mediaLikeCount || 0;
+  const postLikes = v.postLikeCount || 0;
+  const followers = Math.max(v.followCount || 0, 1);
+  const eng = (likes + postLikes) / followers;
+  return Math.round(likes + postLikes + eng * 10000);
+}
+
+function sortList(list, sort) {
+  return list.sort((a, b) => {
+    if (sort === 'score') return scoreOf(b) - scoreOf(a);
+    if (sort === 'likes') return b.mediaLikeCount - a.mediaLikeCount;
+    if (sort === 'position') return a.fyp_position - b.fyp_position;
+    if (sort === 'duration') return (b.duration||0) - (a.duration||0);
+    if (sort === 'followers') return b.followCount - a.followCount;
+    return 0;
+  });
+}
+
+function cardHTML(v) {
+  const locked = !v.access || !v.downloadUrl;
+  const tags = (v.tags || []).slice(0, 6);
+  return `
+    <div class="card">
+      <div class="thumb">
+        ${v.thumbnailUrl ? `<img loading="lazy" src="${esc(v.thumbnailUrl)}" />` : ''}
+        ${locked ? `<div class="lock">VERROUILLÉ</div>` : `<div class="rank">#${v.fyp_position}</div><div class="dur">${fmtDur(v.duration)}</div>`}
+      </div>
+      <div class="body">
+        <div class="who">
+          <span class="name" onclick="openProfile('${esc(v.username)}')">${esc(v.displayName || v.username)}</span>
+          <span class="at" onclick="openProfile('${esc(v.username)}')">@${esc(v.username)}</span>
+        </div>
+        <div class="meta">
+          <span>♥ <b>${fmtLikes(v.mediaLikeCount)}</b></span>
+          <span>👥 <b>${fmtLikes(v.followCount)}</b></span>
+          <span>★ <b>${fmtLikes(scoreOf(v))}</b></span>
+          <span>fyp #${v.fyp_position}</span>
+        </div>
+        <div class="tags">${tags.map(t => `<span class="tag hot" onclick="setTag('${esc(t)}')">${esc(t)}</span>`).join('')}</div>
+        ${v.caption ? `<div class="cap">${esc(v.caption)}</div>` : ''}
+        <div class="actions row">
+          <a class="btn" href="#" onclick="openPlayer('${esc(v.mediaOfferId)}','${esc(v.username)}');return false;" ${locked ? 'style="pointer-events:none;opacity:.4"' : ''}>
+            ${locked ? 'Indisponible' : '▶ Lire'}
+          </a>
+          <a class="btn ghost" href="/download/${esc(v.mediaOfferId)}" ${locked ? 'style="pointer-events:none;opacity:.4"' : ''}>
+            ⬇
+          </a>
+        </div>
+      </div>
+    </div>`;
+}
+
+function render() {
+  const q = $('#q').value.toLowerCase();
+  let sort = $('#sort').value;
+  if (activeTag && !currentUser) sort = 'score';
+  const controls = document.querySelector('.controls');
+
+  let list = videos;
+
+  if (currentUser) {
+    controls.style.display = 'none';
+    renderProfileBar();
+    list = list.filter(v => v.username === currentUser);
+  } else {
+    controls.style.display = '';
+    $('#profileBar').classList.add('hidden');
+    if (activeTag) list = list.filter(v => (v.tags || []).includes(activeTag));
+  }
+
+  if (q) {
+    list = list.filter(v => [v.username, v.displayName, v.caption, ...(v.tags||[])].join(' ').toLowerCase().includes(q));
+  }
+
+  list = sortList([...list], sort);
+
+  $('#stats').textContent = `${list.length} vidéos · ${videos.filter(v=>v.access).length} téléchargeables` +
+    (activeTag && !currentUser ? ` · tag: ${activeTag}` : '');
+  $('#note').textContent = 'Les URLs CDN sont signées et expirent (~7 jours). Relance fetch_fyp_live.py pour rafraîchir les reels.';
+  $('#grid').innerHTML = list.map(cardHTML).join('');
+}
+
+function renderProfileBar() {
+  const mine = videos.filter(v => v.username === currentUser);
+  const first = mine[0];
+  const totalLikes = mine.reduce((s, v) => s + (v.mediaLikeCount || 0), 0);
+  const followers = first ? first.followCount : 0;
+  const initial = (currentUser[0] || '?').toUpperCase();
+  $('#profileBar').innerHTML = `
+    <div class="avatar">${initial}</div>
+    <div>
+      <div class="pname">${esc(first ? (first.displayName || first.username) : currentUser)}</div>
+      <div class="pat">@${esc(currentUser)}</div>
+    </div>
+    <div class="pstats">
+      <span><b>${mine.length}</b> reels</span>
+      <span>♥ <b>${fmtLikes(totalLikes)}</b> total</span>
+      <span>👥 <b>${fmtLikes(followers)}</b> abonnés</span>
+    </div>
+    <button class="btn ghost back-btn" onclick="goHome()">← Retour</button>
+  `;
+  $('#profileBar').classList.remove('hidden');
+}
+
+function openProfile(username) {
+  currentUser = username;
+  activeTag = '';
+  $('#tagFilter').value = '';
+  $('#q').value = '';
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goHome() {
+  currentUser = null;
+  render();
+}
+
+$('#q').addEventListener('input', render);
+$('#sort').addEventListener('change', render);
+$('#tagFilter').addEventListener('change', e => { activeTag = e.target.value; if (activeTag) $('#sort').value = 'score'; render(); });
+function setTag(t) { activeTag = t; $('#tagFilter').value = t; $('#sort').value = 'score'; render(); }
+function openPlayer(moid, username) {
+  const v = $('#player');
+  v.src = `/stream/${moid}`;
+  $('#playerName').textContent = `@${username}`;
+  $('#playerDownload').href = `/download/${moid}`;
+  $('#overlay').classList.remove('hidden');
+  v.play().catch(() => {});
+}
+function closePlayer() {
+  const v = $('#player');
+  v.pause();
+  v.removeAttribute('src');
+  v.load();
+  $('#overlay').classList.add('hidden');
+}
+$('#overlay').addEventListener('click', e => { if (e.target.id === 'overlay') closePlayer(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayer(); });
+$('#sPostsPerDay').addEventListener('change', loadBestHours);
+$('#sTags').addEventListener('input', () => {
+  selectedTags = new Set($('#sTags').value.split(',').map(s => s.trim()).filter(Boolean));
+  renderTagPicker();
+});
+
+// ---------------------------------------------------------------- views
+let currentView = 'fyp';
+
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  const fyp = view === 'fyp';
+  $('#fypControls').style.display = fyp ? '' : 'none';
+  $('#stats').style.display = fyp ? '' : 'none';
+  $('#note').style.display = fyp ? '' : 'none';
+  $('#grid').style.display = fyp ? '' : 'none';
+  $('#analyzeOut').style.display = fyp ? '' : 'none';
+  $('#profileBar').classList.add('hidden');
+  $('#settingsView').classList.toggle('hidden', fyp);
+  if (fyp) { currentUser = null; render(); }
+  else { initSettings(); }
+  window.scrollTo(0, 0);
+}
+
+// ---------------------------------------------------------------- settings
+let lastBrowse = { path: '', parent: null, videos: [] };
+
+function initSettings() {
+  $('#reelsInfo').innerHTML = 'Choisis un dossier puis clique sur Programmer';
+  if (!$('#sStartDate').value) $('#sStartDate').value = todayStr();
+  $('#sStartDate').min = todayStr();
+  loadBestHours();
+  loadScheduled();
+  loadTagPicker();
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function toggleBrowse() {
+  const panel = $('#browsePanel');
+  const show = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !show);
+  if (show) browse();
+}
+
+function browse(path) {
+  const p = path || $('#sFolder').value.trim() || '';
+  fetch('/api/browse?path=' + encodeURIComponent(p)).then(r => r.json()).then(d => {
+    if (d.error) { $('#browseList').innerHTML = `<div class="browse-empty">${esc(d.error)}</div>`; return; }
+    lastBrowse = { path: d.path, parent: d.parent, videos: d.videos };
+    $('#browsePath').textContent = d.path + '  ·  ' + d.videos.length + ' vidéos';
+    const dirs = d.dirs.map(x => `<div class="browse-item dir" data-path="${esc(x.path)}" onclick="browseFrom(this)">📁 ${esc(x.name)}</div>`).join('');
+    const vids = d.videos.map(x => `<div class="browse-item vid">🎬 ${esc(x.name)}</div>`).join('');
+    $('#browseList').innerHTML = (dirs + vids) || '<div class="browse-empty">dossier vide</div>';
+  });
+}
+
+function browseFrom(el) { browse(el.dataset.path); }
+
+function browseParent() {
+  if (lastBrowse.parent) browse(lastBrowse.parent);
+}
+
+function selectFolder() {
+  $('#sFolder').value = lastBrowse.path;
+  $('#browsePanel').classList.add('hidden');
+  $('#reelsInfo').innerHTML = lastBrowse.videos.length
+    ? `<b>${lastBrowse.videos.length}</b> vidéos prêtes à programmer`
+    : 'Aucune vidéo dans ce dossier';
+}
+
+function pickFolder() {
+  fetch('/api/pick-folder', { method: 'POST' }).then(r => r.json()).then(d => {
+    if (d.path) setFolder(d.path);
+  }).catch(() => {});
+}
+
+function setFolder(path) {
+  $('#sFolder').value = path;
+  fetch('/api/browse?path=' + encodeURIComponent(path)).then(r => r.json()).then(d => {
+    if (d.error) { $('#reelsInfo').innerHTML = 'Dossier inaccessible'; return; }
+    lastBrowse = { path: d.path, parent: d.parent, videos: d.videos };
+    $('#reelsInfo').innerHTML = d.videos.length
+      ? `<b>${d.videos.length}</b> vidéos prêtes à programmer`
+      : 'Aucune vidéo dans ce dossier';
+  });
+}
+
+let runSummary = '';
+
+function runSchedule() {
+  $('#runStatus').classList.remove('hidden');
+  $('#runStatus').textContent = 'Lancement...';
+  const body = {
+    folder: $('#sFolder').value.trim(),
+    posts_per_day: parseInt($('#sPostsPerDay').value) || 5,
+    start_date: $('#sStartDate').value,
+    tags: $('#sTags').value,
+    caption: $('#sCaption').value,
+  };
+  fetch('/api/schedule', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(r => r.json()).then(d => {
+    if (d.error) { $('#runStatus').textContent = d.error; return; }
+    runSummary = `${d.total} vidéos · horaires ${(d.hours || []).join(', ')} · écart min 30 min`;
+    pollStatus();
+  });
+}
+
+function stopSchedule() {
+  fetch('/api/scheduler/stop', { method: 'POST' }).then(r => r.json()).then(d => {
+    if (d.error) { alert(d.error); return; }
+    $('#runStatus').classList.remove('hidden');
+    $('#runStatus').textContent = 'Arrêt demandé — se termine après l\'upload en cours...';
+    pollStatus();
+  });
+}
+
+function loadBestHours() {
+  const n = parseInt($('#sPostsPerDay').value) || 5;
+  $('#bestHoursOut').innerHTML = '<span class="browse-empty">Analyse…</span>';
+  fetch('/api/best-hours?n=' + n).then(r => r.json()).then(d => {
+    if (!d.hours || !d.hours.length) {
+      $('#bestHoursOut').innerHTML = '<span class="browse-empty">Pas assez de données pour analyser les horaires</span>';
+      return;
+    }
+    const chips = d.hours.map(h => `<span class="hour-chip">${String(h.hour).padStart(2, '0')}:${String(h.minute).padStart(2, '0')}<span>${h.score}</span></span>`).join('');
+    const peak = Math.max(...d.curve, 1);
+    const bars = d.curve.map((v, i) => {
+      const hot = d.hours.some(h => h.hour === i);
+      return `<div class="bar ${hot ? 'hot' : ''}" style="height:${Math.round(v / peak * 100)}%" title="${String(i).padStart(2, '0')}:00 — ${v}"></div>`;
+    }).join('');
+    $('#bestHoursOut').innerHTML = chips + `<div class="chart">${bars}</div>`;
+  });
+}
+
+let tagPool = [];
+let selectedTags = new Set();
+
+function loadTagPicker() {
+  $('#tagPicker').innerHTML = '<span class="browse-empty">Chargement des tags…</span>';
+  Promise.all([
+    fetch('/api/tags/best?n=20').then(r => r.json()).catch(() => []),
+    fetch('/api/tags/trending?n=20').then(r => r.json()).catch(() => []),
+  ]).then(([best, trending]) => {
+    const seen = new Set();
+    tagPool = [];
+    [...(best || []), ...(trending || [])].forEach(t => {
+      if (t && !seen.has(t)) { seen.add(t); tagPool.push(t); }
+    });
+    renderTagPicker();
+  });
+}
+
+function renderTagPicker() {
+  $('#tagPicker').innerHTML = tagPool.length
+    ? tagPool.map(t => `<span class="tag tag-pick${selectedTags.has(t) ? ' sel' : ''}" onclick="toggleTagPick('${esc(t)}')">#${esc(t)}</span>`).join('')
+    : '<span class="browse-empty">Aucun tag dispo — lance une Analyse dans l\'onglet FYP</span>';
+}
+
+function toggleTagPick(t) {
+  if (selectedTags.has(t)) selectedTags.delete(t); else selectedTags.add(t);
+  syncTagsInput();
+  renderTagPicker();
+}
+
+function syncTagsInput() {
+  $('#sTags').value = [...selectedTags].join(', ');
+}
+
+function clearTagPick() {
+  selectedTags.clear();
+  $('#sTags').value = '';
+  renderTagPicker();
+}
+
+function fillTrendingInput() {
+  fetch('/api/tags/best?n=5').then(r => r.json()).then(tags => {
+    if (Array.isArray(tags) && tags.length) {
+      selectedTags = new Set(tags);
+      syncTagsInput();
+      renderTagPicker();
+    }
+  });
+}
+
+function toggleRecap() {
+  const panel = $('#recapPanel');
+  const show = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !show);
+  if (show) loadRecap();
+}
+
+const STATUS_LABEL = { publie: '✓ Publié', programme: '⏳ Programmé', introuvable: '⚠ Introuvable / perdu' };
+
+function loadRecap() {
+  $('#recapPanel').classList.remove('hidden');
+  $('#recapList').innerHTML = '<span class="browse-empty">Chargement du récap (croisement Fansly)…</span>';
+  fetch('/api/recap').then(r => r.json()).then(rows => {
+    if (rows.error) { $('#recapList').innerHTML = `<span class="browse-empty">${esc(rows.error)}</span>`; return; }
+    if (!Array.isArray(rows) || !rows.length) {
+      $('#recapList').innerHTML = '<span class="browse-empty">Aucun reel dans le journal (scheduled_log.json vide).</span>';
+      return;
+    }
+    $('#recapList').innerHTML = rows.map(recapRowHTML).join('');
+  }).catch(() => {
+    $('#recapList').innerHTML = '<span class="browse-empty">Erreur de chargement du récap.</span>';
+  });
+}
+
+function recapRowHTML(row) {
+  const thumb = row.thumbnail
+    ? `<img class="recap-thumb" src="${esc(row.thumbnail)}" loading="lazy" />`
+    : `<div class="recap-thumb empty">pas d'aperçu</div>`;
+  const tags = (row.tags || []).map(t => `<span class="tag">#${esc(t)}</span>`).join('');
+  const when = row.when ? esc(row.when) : (row.status === 'introuvable' ? 'jamais publié ni programmé' : '?');
+  const likes = row.likeCount != null ? `<div class="recap-likes">♥ ${row.likeCount} like(s)</div>` : '';
+  return `
+    <div class="recap-row">
+      ${thumb}
+      <div class="recap-body">
+        <div class="recap-top">
+          <span class="recap-file">${esc(row.file)}</span>
+          <span class="recap-status ${row.status}">${STATUS_LABEL[row.status] || row.status}</span>
+        </div>
+        <div class="recap-when">${when}</div>
+        ${row.description ? `<div class="recap-desc">${esc(row.description)}</div>` : ''}
+        <div class="recap-tags tags">${tags}</div>
+        ${likes}
+      </div>
+    </div>`;
+}
+
+function resetLog() {
+  if (!confirm('Réinitialiser le journal ? (permet de re-programmer les mêmes vidéos)')) return;
+  fetch('/api/scheduler/reset-log', { method: 'POST' }).then(r => r.json()).then(d => {
+    if (d.ok) alert('Journal réinitialisé — les vidéos pourront être re-programmées.');
+  });
+}
+
+function pollStatus() {
+  fetch('/api/scheduler/status').then(r => r.json()).then(d => {
+    let txt = (d.log || []).join('\n');
+    if (runSummary) txt = runSummary + '\n' + txt;
+    if (d.running) txt = `En cours (${d.done}/${d.total})...\n` + txt;
+    if (d.error) txt += '\n[ERR] ' + d.error;
+    $('#runStatus').textContent = txt;
+    if (d.running) setTimeout(pollStatus, 2000);
+  });
+}
+
+function loadScheduled() {
+  $('#scheduledOut').textContent = 'Chargement...';
+  fetch('/api/scheduled').then(r => r.json()).then(d => {
+    if (d.error) { $('#scheduledOut').textContent = d.error; return; }
+    if (!Array.isArray(d) || !d.length) { $('#scheduledOut').textContent = 'Aucun post planifié.'; return; }
+    $('#scheduledOut').innerHTML = d.map(p => {
+      let content = p.content || '';
+      if (!content && p.postTemplate) {
+        try { content = JSON.parse(p.postTemplate).content || ''; } catch (e) {}
+      }
+      const when = p.scheduledFor || p.scheduledAt || p.createdAt || '';
+      const whenStr = when ? new Date(when).toLocaleString() : '?';
+      const pid = p.postId || p.id || '';
+      return `
+        <div class="sched-row">
+          <span class="sched-info">${whenStr} · ${esc((content || '').slice(0, 90))}</span>
+          <button class="btn ghost del" onclick="deleteScheduled('${esc(pid)}')">🗑</button>
+        </div>`;
+    }).join('');
+  });
+}
+
+function deleteScheduled(postId) {
+  if (!postId) return;
+  if (!confirm('Supprimer ce post planifié ?')) return;
+  fetch('/api/scheduled/' + encodeURIComponent(postId) + '/delete', { method: 'POST' })
+    .then(r => r.json()).then(d => {
+      if (d.error) { alert(d.error); return; }
+      loadScheduled();
+    });
+}
+
+function deleteAllScheduled() {
+  if (!confirm('Supprimer TOUS les posts planifiés ?')) return;
+  $('#scheduledOut').textContent = 'Suppression en cours...';
+  fetch('/api/scheduled/delete-all', { method: 'POST' })
+    .then(r => r.json()).then(d => {
+      if (d.error) { alert(d.error); return; }
+      alert(`${d.deleted} posts supprimés` + (d.errors ? ` (${d.errors} erreurs)` : ''));
+      loadScheduled();
+    });
+}
+
+// ---------------------------------------------------------------- analyse FYP
+let analyzeWasRunning = false;
+
+function runAnalyze() {
+  $('#analyzeOut').classList.remove('hidden');
+  $('#analyzeOut').textContent = 'Analyse lancée...';
+  fetch('/api/analyze', { method: 'POST' }).then(r => r.json()).then(d => {
+    if (d.error) { $('#analyzeOut').textContent = d.error; return; }
+    pollAnalyze();
+  });
+}
+
+function pollAnalyze() {
+  fetch('/api/analyze/status').then(r => r.json()).then(d => {
+    let txt = (d.log || []).join('\n');
+    if (d.running) { txt = 'Analyse en cours...\n' + txt; analyzeWasRunning = true; }
+    if (d.error) txt += '\n[ERR] ' + d.error;
+    if (d.report) {
+      txt += '\n\n=== Résumé ===\n';
+      txt += 'Reels : ' + d.report.total_reels + '\n';
+      txt += 'Top tags : ' + (d.report.top_tags || []).join(', ') + '\n';
+      txt += 'Meilleures heures : ' + (d.report.best_hours || []).join(', ');
+    }
+    $('#analyzeOut').textContent = txt;
+    if (d.running) { setTimeout(pollAnalyze, 2000); return; }
+    if (analyzeWasRunning) { analyzeWasRunning = false; refreshVideos(); }
+  });
+}
+
+async function refreshVideos() {
+  const r = await fetch('/api/videos');
+  videos = await r.json();
+  buildTagFilter();
+  if (currentView === 'fyp') render();
+}
+
+checkSession();
+</script>
+</body>
+</html>

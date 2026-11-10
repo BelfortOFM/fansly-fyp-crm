@@ -1,0 +1,61 @@
+CRM FYP Fansly — guide de démarrage
+====================================
+
+1) INSTALLATION (une seule fois)
+---------------------------------
+- Installer Python 3 si tu ne l'as pas déjà (python.org).
+- Ouvrir le Terminal, aller dans ce dossier, puis lancer :
+
+    pip3 install -r requirements.txt
+
+2) LANCER L'OUTIL
+------------------
+Dans le Terminal, depuis ce dossier :
+
+    python3 crm_server.py
+
+Puis ouvrir dans ton navigateur :
+
+    http://127.0.0.1:5000
+
+Laisse le Terminal ouvert pendant que tu utilises l'outil (c'est lui qui fait
+tourner le serveur). Pour arrêter : Ctrl+C dans le Terminal.
+
+3) SE CONNECTER AVEC TON PROPRE COMPTE FANSLY
+-----------------------------------------------
+Au premier lancement, l'outil te demande de te connecter. C'est TON compte
+Fansly, TON token — l'outil scrape et publie avec TA session, jamais celle
+de quelqu'un d'autre.
+
+Étapes :
+  1. Connecte-toi sur fansly.com dans ton navigateur habituel.
+  2. Ouvre les outils dev (F12, ou Cmd+Option+I sur Mac) → onglet Network.
+  3. Recharge la page fansly.com, clique sur une requête vers
+     apiv3.fansly.com (ex: account/me).
+  4. Clic droit sur la requête → Copy → "Copy as cURL (bash)".
+  5. Colle tout dans la case de l'écran de connexion, clique "Se connecter".
+
+Si ça échoue, utilise le lien "remplir à la main" pour entrer séparément :
+authorization, cookie, fansly-client-id, fansly-session-id (visibles dans
+les en-têtes de la même requête, onglet "Headers").
+
+⚠️ Ce token donne un accès complet à ton compte Fansly. Ne le partage avec
+personne, ne l'envoie jamais par message. Il est stocké uniquement en local
+dans un fichier config.json créé à côté de ces scripts — ne jamais l'envoyer
+à quelqu'un d'autre ni le mettre en ligne.
+
+4) UTILISATION
+---------------
+- Bouton "🔍 Analyse" (en haut) : scrape ta FYP en direct pour mettre à jour
+  le classement des meilleurs reels et les meilleurs tags/heures.
+- Onglet "Paramètres" : choisis ton dossier de vidéos à poster, combien par
+  jour, et lance la programmation — l'outil choisit les meilleures heures
+  à partir de tes propres données.
+- "Changer de compte" (en haut à droite) si tu veux reconnecter un autre
+  compte Fansly sur cette même installation.
+
+5) SI LE TOKEN EXPIRE
+-----------------------
+Les sessions Fansly expirent après un certain temps. Si l'analyse ou la
+programmation renvoie une erreur de session, refais l'étape 3 pour
+reconnecter ton compte.
